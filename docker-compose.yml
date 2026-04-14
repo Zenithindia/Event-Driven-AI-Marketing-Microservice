@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    volumes:
+      - ./api:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+  worker:
+    build: ./worker
+    depends_on:
+      - redis
+    volumes:
+      - ./worker:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    # This bypasses the Windows Firewall to reach Ollama!
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
